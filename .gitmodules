@@ -1,0 +1,18 @@
+[submodule "kali-nethunter-kernel-builder"]
+	path = kali-nethunter-kernel-builder
+	url = https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-kernel-builder
+[submodule "android_kernel_nethunter"]
+	path = android_kernel_nethunter
+	url = https://github.com/cyberknight777/android_kernel_nethunter.git
+[submodule "drivers/net/wireless/mediatek/mt76"]
+	path = drivers/net/wireless/mediatek/mt76
+	url = https://github.com/akabul0us/mt76
+[submodule "drivers/net/wireless/realtek/rtl88x2bu"]
+	path = drivers/net/wireless/realtek/rtl88x2bu
+	url = https://github.com/akabul0us/rtl88x2bu
+[submodule "drivers/net/wireless/realtek/rtl8812au"]
+	path = drivers/net/wireless/realtek/rtl8812au
+	url = https://github.com/akabul0us/rtl8812au
+[submodule "android_kernel_docker"]
+	path = android_kernel_docker
+	url = https://github.com/cyberknight777/android_kernel_docker
