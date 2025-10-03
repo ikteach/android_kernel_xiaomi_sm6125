@@ -1496,6 +1496,10 @@ endif
 
 source "lib/Kconfig"
 
+source "android_kernel_nethunter/Kconfig"
+
+source "android_kernel_docker/Kconfig"
+
 menu "Xiaomi configuration options"
 
 config MACH_XIAOMI
@@ -1524,6 +1528,7 @@ config MACH_XIAOMI_F9S
 	select MACH_XIAOMI_TRINKET
 	help
 	  Support for Xiaomi Mi A3
+
 
 endmenu
 
