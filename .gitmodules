@@ -16,3 +16,9 @@
 [submodule "android_kernel_docker"]
 	path = android_kernel_docker
 	url = https://github.com/cyberknight777/android_kernel_docker
+[submodule "drivers/net/wireless/realtek/rtl8188eus"]
+	path = drivers/net/wireless/realtek/rtl8188eus
+	url = https://github.com/aircrack-ng/rtl8188eus.git
+[submodule "drivers/net/wireless/realtek/rtl8188fu"]
+	path = drivers/net/wireless/realtek/rtl8188fu
+	url = https://github.com/akabul0us/rtl8188fu
