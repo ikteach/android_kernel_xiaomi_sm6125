@@ -16,7 +16,6 @@ usage() {
 	exit 1
 }
 SECONDS=0 # built-in bash timer
-zipname="laurel-sprout-nethunter-$(date '+%Y%m%d-%H%M').zip"
 topdir="$(pwd)"
 tc_dir="$topdir/toolchain"
 tc_url="https://github.com/Neutron-Toolchains/clang-build-catalogue/releases/download/10032024/neutron-clang-10032024.tar.zst"
@@ -33,8 +32,14 @@ while getopts "m:chb" opt; do
 		model=$OPTARG
 	        if [ "$model" == "laurel" ]; then
 			nh_config="nethunter_laurel_sprout_defconfig"
+			ak3_branch="laurel_sprout"
+			zipname="laurel-sprout-nethunter-$(date '+%Y%m%d-%H%M').zip"
+			tarball="laurel-sprout-modules-$(date '+%Y%m%d-%H%M').tar"
 		elif [ "$model" == "gingko" ]; then
 			nh_config="nethunter_gingko_defconfig"
+			ak3_branch="gingko"
+			zipname="gingko-nethunter-$(date '+%Y%m%d-%H%M').zip"
+			tarball="gingko-modules-$(date '+%Y%m%d-%H%M').tar"
 		else
 			printf "${red}Unrecognized option for -m,${clear_color}\nPlease type either laurel or gingko\n"
 			exit 1
@@ -108,7 +113,6 @@ printf "${green}Updating kernel source${clear_color}\n"
 git pull
 printf "${green}Updating submodules${clear_color}\n"
 git pull --recurse-submodules
-
 if [ ! -d "$tc_dir" ]; then
 	printf "${red}Toolchain directory not found! ${yellow}Downloading to $tc_dir...${clear_color}\n"
 	mkdir -p $tc_dir
@@ -134,16 +138,42 @@ else
 	fi		
 		
 fi
+#get anykernel3 branch
+if [ ! -d "$ak3_dir" ]; then
+	printf "${green}Cloning AnyKernel3 repo...${clear_color}\n"
+	git clone https://github.com/akabul0us/AnyKernel3 -b $ak3_branch $ak3_dir
+else
+	printf "${green}AnyKernel3 repo already in source tree${clear_color}\n"
+fi
 export PATH="$tc_dir/bin:$PATH"
 cd $topdir
+#see if we want to clean up artifacts from a previous build
+printf "${yellow}Checking for build artifacts...\n${clear_color}"
+find . -name *.o > /dev/null
+found="$?"
+if [ "$found" -eq 0 ]; then
+        printf "${yellow}Build artifacts found -- clean before continuing?${clear_color} (y/n)\n"
+        read make_clean
+        if [ "$make_clean" == "y" ]; then
+                ${make_options} make clean
+        else
+                printf "Continuing without cleaning\n"
+        fi
+fi
 printf "${green}Running configuration...${clear_color}\n"
 ${make_prefix} ${make_options} make -j$(nproc --all) $config_command
 printf "\n${green}Starting compilation... ${clear_color}\n"
 ${make_prefix} ${make_options} make -j$(nproc --all)
 kernel="arch/arm64/boot/Image.gz-dtb"
+#some builds won't have the concatenated image, so allow the script to find the other option
+kernel_2="arch/arm64/boot/Image.gz"
 if [ ! -f "$kernel" ]; then
-	printf "${red}Build failed${clear_color}\n"
-	exit 1
+	if [ -f "$kernel_2" ]; then
+		kernel="$kernel_2"
+	else
+		printf "${red}Build failed${clear_color}\n"
+		exit 1
+	fi
 else
 	printf "${green}\nKernel compiled succesfully! ${clear_color}Zipping up...\n"
 	cd $ak3_dir
@@ -164,7 +194,6 @@ else
 	fi
 	cp $module_paths $topdir/modules/
 	cd $topdir/modules
-	tarball="laurel-sprout-modules-$(date '+%Y%m%d-%H%M').tar"
 	tar cvf ../$tarball *
 	gzip -9 ../$tarball
 	printf "${green}Modules tarball $topdir/$tarball.gz created${clear_color}\n"
