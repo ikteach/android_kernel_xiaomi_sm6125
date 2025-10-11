@@ -38,6 +38,7 @@
 *.symtypes
 *.tar
 *.xz
+*.dtbo
 Module.symvers
 modules.builtin
 
@@ -128,6 +129,6 @@ kernel/configs/android-*.cfg
 #Ignoring Android.bp link file
 #
 Android.bp
-
+/toolchain/
 /modules/
 /AnyKernel3/

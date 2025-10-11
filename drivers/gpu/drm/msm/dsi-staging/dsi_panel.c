@@ -907,7 +907,6 @@ int dsi_panel_set_dimming_brightness(struct dsi_panel *panel, u8 dimming,
 	return rc;
 }
 #endif
-
 #ifdef CONFIG_MACH_XIAOMI_C3J
 extern int sgm_brightness_set(uint16_t brightness);
 static int dsi_panel_update_backlight_external(struct dsi_panel *panel,
