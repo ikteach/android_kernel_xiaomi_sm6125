@@ -16,3 +16,6 @@
 [submodule "drivers/net/wireless/realtek/rtl88x2bu"]
 	path = drivers/net/wireless/realtek/rtl88x2bu
 	url = https://github.com/akabul0us/rtl88x2bu
+[submodule "android_kernel_nethunter"]
+	path = android_kernel_nethunter
+	url = https://github.com/cyberknight777/android_kernel_nethunter.git
