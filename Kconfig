@@ -12,3 +12,7 @@ config SRCARCH
 source "arch/$SRCARCH/Kconfig"
 
 source "techpack/Kconfig"
+
+source "android_kernel_docker"
+
+source "android_kernel_nethunter"
