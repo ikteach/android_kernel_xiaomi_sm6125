@@ -241,7 +241,6 @@ static inline void *sg_virt(struct scatterlist *sg)
 {
 	return page_address(sg_page(sg)) + sg->offset;
 }
-
 /**
  * sg_init_marker - Initialize markers in sg table
  * @sgl:	   The SG table
@@ -251,14 +250,20 @@ static inline void *sg_virt(struct scatterlist *sg)
 static inline void sg_init_marker(struct scatterlist *sgl,
 				  unsigned int nents)
 {
-#ifdef CONFIG_DEBUG_SG
-	unsigned int i;
-	for (i = 0; i < nents; i++)
-		sgl[i].sg_magic = SG_MAGIC;
-#endif
 	sg_mark_end(&sgl[nents - 1]);
 }
 
+int sg_nents(struct scatterlist *sg);
+int sg_nents_for_len(struct scatterlist *sg, u64 len);
+struct scatterlist *sg_next(struct scatterlist *);
+struct scatterlist *sg_last(struct scatterlist *s, unsigned int);
+void sg_init_table(struct scatterlist *, unsigned int);
+void sg_init_one(struct scatterlist *, const void *, unsigned int);
+int sg_split(struct scatterlist *in, const int in_mapped_nents,
+	     const off_t skip, const int nb_splits,
+	     const size_t *split_sizes,
+	     struct scatterlist **out, int *out_mapped_nents,
+	     gfp_t gfp_mask);
 int sg_nents(struct scatterlist *sg);
 int sg_nents_for_len(struct scatterlist *sg, u64 len);
 struct scatterlist *sg_next(struct scatterlist *);
