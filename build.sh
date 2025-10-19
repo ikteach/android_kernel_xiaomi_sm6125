@@ -41,7 +41,7 @@ while getopts "m:chb" opt; do
 			zipname="gingko-nethunter-$(date '+%Y%m%d-%H%M').zip"
 			tarball="gingko-modules-$(date '+%Y%m%d-%H%M').tar"
 		else
-			printf "${red}Unrecognized option for -m,${clear_color}\nPlease type either laurel or gingko\n"
+			printf "${red}Unrecognized option for -m,${clear_color}\nPlease type either ${green}laurel${clear_color} or ${green}gingko${clear_color}\n"
 			exit 1
 		fi	
 		config_command="$nh_config"
@@ -113,6 +113,20 @@ printf "${green}Updating kernel source${clear_color}\n"
 git pull
 printf "${green}Updating submodules${clear_color}\n"
 git pull --recurse-submodules
+#for some reason this^ does not always work
+#until i figure out why, this next bit is designed to check if it did, and if not, add the submodules one by one
+if [ ! -f "$topdir/drivers/net/wireless/mediatek/mt76/mt76x2_core.c" ]; then
+	printf "${red}Something has gone wrong with submodules${clear_color}\n"
+	printf "${yellow}Adding one by one...${clear_color}\n"
+	git submodule add --force https://github.com/aircrack-ng/rtl8188eus drivers/net/wireless/realtek/rtl8188eus
+	git submodule add --force https://github.com/akabul0us/mt76 drivers/net/wireless/mediatek/mt76
+	git submodule add --force https://github.com/akabul0us/rtl88x2bu drivers/net/wireless/realtek/rtl88x2bu
+	git submodule add --force https://github.com/akabul0us/rtl8812au drivers/net/wireless/realtek/rtl8812au
+	git submodule add --force https://github.com/akabul0us/rtl8188fu drivers/net/wireless/realtek/rtl8188fu
+	git submodule add --force https://github.com/cyberknight777/android_kernel_docker android_kernel_docker
+	git submodule add --force https://github.com/cyberknight777/android_kernel_nethunter android_kernel_nethunter
+	#git submodule add https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-kernel-builder kali-nethunter-kernel-builder
+fi
 if [ ! -d "$tc_dir" ]; then
 	printf "${red}Toolchain directory not found! ${yellow}Downloading to $tc_dir...${clear_color}\n"
 	mkdir -p $tc_dir
@@ -143,7 +157,7 @@ if [ ! -d "$ak3_dir" ]; then
 	printf "${green}Cloning AnyKernel3 repo...${clear_color}\n"
 	git clone https://github.com/akabul0us/AnyKernel3 -b $ak3_branch $ak3_dir
 else
-	printf "${green}AnyKernel3 repo already in source tree${clear_color}\n"
+	printf "${yellow}AnyKernel3 repo already in source tree${clear_color}\n"
 fi
 export PATH="$tc_dir/bin:$PATH"
 cd $topdir
@@ -157,7 +171,7 @@ if [ "$found" -eq 0 ]; then
         if [ "$make_clean" == "y" ]; then
                 ${make_options} make clean
         else
-                printf "Continuing without cleaning\n"
+                printf "${yellow}Continuing without cleaning${clear_color}\n"
         fi
 fi
 printf "${green}Running configuration...${clear_color}\n"
