@@ -163,21 +163,21 @@ export PATH="$tc_dir/bin:$PATH"
 cd $topdir
 #see if we want to clean up artifacts from a previous build
 printf "${yellow}Checking for build artifacts...\n${clear_color}"
-find . -name *.o > /dev/null
+find . -name "*.o" > /dev/null
 found="$?"
 if [ "$found" -eq 0 ]; then
         printf "${yellow}Build artifacts found -- clean before continuing?${clear_color} (y/n)\n"
         read make_clean
         if [ "$make_clean" == "y" ]; then
-                ${make_options} make clean
+                make ${make_options} clean
         else
                 printf "${yellow}Continuing without cleaning${clear_color}\n"
         fi
 fi
 printf "${green}Running configuration...${clear_color}\n"
-${make_prefix} ${make_options} make -j$(nproc --all) $config_command
+make ${make_prefix} ${make_options} -j$(nproc --all) $config_command
 printf "\n${green}Starting compilation... ${clear_color}\n"
-${make_prefix} ${make_options} make -j$(nproc --all)
+make ${make_prefix} ${make_options} -j$(nproc --all)
 kernel="arch/arm64/boot/Image.gz-dtb"
 #some builds won't have the concatenated image, so allow the script to find the other option
 kernel_2="arch/arm64/boot/Image.gz"
