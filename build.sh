@@ -117,7 +117,7 @@ printf "${green}Updating kernel source${clear_color}\n"
 git pull
 printf "${green}Updating submodules${clear_color}\n"
 git submodule init
-git submodule update --recursive --remote
+git submodule update --remote
 if [ ! -d "$tc_dir" ]; then
 	printf "${red}Toolchain directory not found! ${clear_color}Downloading to ${yellow}$tc_dir...${clear_color}\n"
 	mkdir -p $tc_dir
