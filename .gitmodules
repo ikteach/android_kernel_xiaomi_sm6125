@@ -19,3 +19,6 @@
 [submodule "android_kernel_nethunter"]
 	path = android_kernel_nethunter
 	url = https://github.com/cyberknight777/android_kernel_nethunter.git
+[submodule "kali-nethunter-kernel-builder"]
+	path = kali-nethunter-kernel-builder
+	url = https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-kernel-builder
