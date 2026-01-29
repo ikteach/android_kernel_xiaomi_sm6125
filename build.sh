@@ -186,9 +186,9 @@ printf "Running ${green}configuration${clear_color}...\n"
 ${make_prefix} make ${make_options} -j$(nproc --all) $config_command
 printf "\nStarting ${green}compilation${clear_color}...\n"
 ${make_prefix} make ${make_options} -j$(nproc --all)
-kernel="arch/arm64/boot/Image.gz-dtb"
+kernel="$topdir/arch/arm64/boot/Image.gz-dtb"
 #some builds won't have the concatenated image, so allow the script to find the other option
-kernel_2="arch/arm64/boot/Image.gz"
+kernel_2="$topdir/arch/arm64/boot/Image.gz"
 if [ ! -f "$kernel" ]; then
 	if [ -f "$kernel_2" ]; then
 		kernel="$kernel_2"
@@ -196,16 +196,15 @@ if [ ! -f "$kernel" ]; then
 		printf "${red}Build failed${clear_color}\n"
 		exit 1
 	fi
-else
-	cd $ak3_dir
-	printf "Copying compiled ${green}kernel image${clear_color} into $ak3_dir\n"
-	cp $topdir/$kernel .
-	if [ -f "$topdir/$dtbo" ]; then
-		printf "Packing ${green}dtbo.img${clear_color}...\n"
-		mkdtimg create dtbo.img $topdir/$dtbo
-	fi
-	zip -r9 "$topdir/$zipname" * -x .git README.md *placeholder && printf "Kernel zip ${green}$zipname${clear_color} created\n"
 fi
+cd $topdir/$ak3_dir
+printf "Copying compiled ${green}kernel image${clear_color} into $ak3_dir\n"
+cp $topdir/$kernel .
+if [ -f "$topdir/$dtbo" ]; then
+	printf "Packing ${green}dtbo.img${clear_color}...\n"
+	mkdtimg create dtbo.img $topdir/$dtbo
+fi
+zip -r9 "$topdir/$zipname" * -x .git README.md *placeholder && printf "Kernel zip ${green}$zipname${clear_color} created\n"
 #pack modules tarball
 moduledir="modules-$(date '+%Y%m%d-%H%M')"
 cd $topdir
