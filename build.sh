@@ -81,29 +81,29 @@ confirm() {
 deny() {
 	printf "${red}no${clear_color}\n"
 }
-printf "Checking that operating system is ${yellow}Linux... ${clear_color}"
+printf "Checking that operating system is ${yellow}Linux${clear_color}... "
 if [ "$(uname -s)" == "Linux" ]; then
 	confirm
 else
 	deny
-	printf "${red}Building not supported on operating systems other than Linux. Quitting${clear_color}\n"
+	printf "Building ${red}not supported${clear_color} on operating systems ${red}other than Linux${clear_color}. Quitting\n"
 	exit 1
 fi
-printf "Checking that architecture is ${yellow}x86_64... ${clear_color}"
+printf "Checking that architecture is ${yellow}x86_64 ${clear_color}... "
 if [ "$(uname -m)" == "x86_64" ]; then
 	confirm
 else
 	deny
-	printf "${red}Building not supported on architectures other than x86_64. Quitting${clear_color}\n"
+	printf "Building ${red}not supported${clear_color} on architectures ${red}other than x86_64${clear_color}. Quitting\n"
 	exit 1
 fi
 check_installation() {
-printf "Checking for ${yellow}$program... "
+printf "Checking for ${yellow}$program${clear_color}... "
 if command -v $program >/dev/null 2>&1; then
 	confirm
 else
 	deny
-	printf "${red}Please install $program and run this script again${clear_color}\n"
+	printf "Please install ${red}$program${clear_color} and run this script again\n"
 	exit 1
 fi
 }
@@ -119,18 +119,18 @@ printf "${green}Updating submodules${clear_color}\n"
 git submodule init
 git submodule update --remote
 if [ ! -d "$tc_dir" ]; then
-	printf "${red}Toolchain directory not found! ${clear_color}Downloading to ${yellow}$tc_dir...${clear_color}\n"
+	printf "${red}Toolchain${clear_color} directory not found! Downloading to ${yellow}$tc_dir${clear_color}... \n"
 	mkdir -p $tc_dir
 	cd $tc_dir
-	curl -fsSL $tc_url | tar --zstd -xvf -
-	if [ ! -e $tc_dir/bin/clang-19 ]; then
+	curl -fsSL $tc_url | tar --zstd -xf -
+	if [ ! -e "$tc_dir/bin/clang-19" ]; then
 		printf "${red}Something went wrong${clear_color}\n"
 		exit 1
 	else
-		printf "${green}Success! ${clear_color}\n"
+		printf "${green}downloaded${clear_color}\n"
 	fi
 else
-	if [ ! -e $tc_dir/bin/clang-19 ]; then
+	if [ ! -e "$tc_dir/bin/clang-19" ]; then
 		printf "${yellow}$tc_dir/bin${clear_color} does not contain expected files...\n"
 		printf "If you want to continue anyway, perhaps using a different version of clang, type \'continue\' now: "
 		read continue_anyway
@@ -143,16 +143,18 @@ else
 	fi		
 fi
 #check for mkdtimg and download if not found
-if command -v mkdtimg >/dev/null 2&>1; then
+if ! command -v mkdtimg >/dev/null 2&>1; then
 	if [ ! -e "$tc_dir/bin/mkdtimg" ]; then
-		printf "${red}mkdtimg not found in PATH or toolchain bin directory${clear_color} - downloading...\n"
-		curl -o $tc_dir/bin/mkdtimg -fsSL $mkdtimg_url
+		printf "${red}mkdtimg${clear_color} not found in"
+	       	printf ' $PATH ' 
+		printf "or toolchain bin/ directory - downloading... "
+		curl -o $tc_dir/bin/mkdtimg -fsSL $mkdtimg_url && printf "${green}downloaded${clear_color}\n"
 		chmod +x $tc_dir/bin/mkdtimg
 	else
-		printf "${yellow}mkdtimg${clear_color} found in toolchain directory\n"
+		printf "${green}mkdtimg${clear_color} found in toolchain directory\n"
 	fi
 else
-	printf "${yellow}mkdtimg${clear_color} found in user's PATH\n"
+	printf "${green}mkdtimg${clear_color} found in user's PATH\n"
 fi
 #using wrapper around /usr/bin/dtc to pass options to it
 if [ ! -e "$tc_dir/bin/dtc" ]; then
@@ -161,27 +163,28 @@ if [ ! -e "$tc_dir/bin/dtc" ]; then
 fi
 #get anykernel3 branch
 if [ ! -d "$ak3_dir" ]; then
-	printf "Cloning ${yellow}AnyKernel3${clear_color} repo...${clear_color}\n"
+	printf "Cloning ${green}AnyKernel3${clear_color} repo...\n"
 	git clone https://github.com/akabul0us/AnyKernel3 -b $ak3_branch $ak3_dir
 else
-	printf "${yellow}AnyKernel3${clear_color} repo already in source tree\n"
+	printf "${green}AnyKernel3${clear_color} repo already in source tree\n"
 fi
 export PATH="$tc_dir/bin:$PATH"
 cd $topdir
 #see if we want to clean up artifacts from a previous build
-printf "Checking for ${yellow}build artifacts...${clear_color}\n"
+printf "Checking for ${yellow}build artifacts${clear_color}...\n"
 if (find . -name "*.o" > /dev/null); then
-        printf "${yellow}Build artifacts found -- clean before continuing?${clear_color} (y/n)\n"
+        printf "${yellow}Build artifacts${clear_color} found -- clean before continuing? (y/n) "
         read make_clean
         if [ "$make_clean" == "y" ]; then
+		printf "${green}Cleaning${clear_color}...\n"
                 make ${make_options} clean
         else
-                printf "${yellow}Continuing without cleaning${clear_color}\n"
+                printf "\n${yellow}Continuing${clear_color} without cleaning\n"
         fi
 fi
-printf "Running ${green}configuration...${clear_color}\n"
+printf "Running ${green}configuration${clear_color}...\n"
 ${make_prefix} make ${make_options} -j$(nproc --all) $config_command
-printf "\nStarting ${green}compilation... ${clear_color}\n"
+printf "\nStarting ${green}compilation${clear_color}...\n"
 ${make_prefix} make ${make_options} -j$(nproc --all)
 kernel="arch/arm64/boot/Image.gz-dtb"
 #some builds won't have the concatenated image, so allow the script to find the other option
@@ -195,29 +198,31 @@ if [ ! -f "$kernel" ]; then
 	fi
 else
 	cd $ak3_dir
+	printf "Copying compiled ${green}kernel image${clear_color} into $ak3_dir\n"
 	cp $topdir/$kernel .
-	if [ -f "$dtbo" ]; then
-	       mkdtimg create dtbo.img
+	if [ -f "$topdir/$dtbo" ]; then
+		printf "Packing ${green}dtbo.img${clear_color}...\n"
+		mkdtimg create dtbo.img $topdir/$dtbo
 	fi
-	zip -r9 "../$zipname" * -x .git README.md *placeholder
-	echo "Zip: $zipname"
+	zip -r9 "$topdir/$zipname" * -x .git README.md *placeholder && printf "Kernel zip ${green}$zipname${clear_color} created\n"
 fi
 #pack modules tarball
 moduledir="modules-$(date '+%Y%m%d-%H%M')"
 cd $topdir
-printf "Looking for compiled ${yellow}modules...${clear_color}\n"
+printf "Looking for compiled ${yellow}modules${clear_color}... "
 if (find . -name *.ko > /dev/null); then
+	printf "${green}found${clear_color} - packing tarball\n"
 	module_paths="$(find . -name *.ko)"
 	mkdir -p $topdir/$moduledir
 	for m in $module_paths; do
 		cp $m $moduledir
 	done
 	cd $moduledir
-	tar cvf ../$tarball *
+	tar cf ../$tarball *
 	gzip -9 ../$tarball
-	rm -rf $moduledir
+	rm -rf $topdir/$moduledir
 	printf "Modules tarball ${green}$topdir/$tarball.gz${clear_color} created\n"
 else
 	printf "None found\n"
 fi
-printf "\nCompleted in${green} $((SECONDS / 60)) minute(s) and $((SECONDS % 60)) second(s)! ${clear_color}\n"
+printf "\nCompleted in${green} $((SECONDS / 60)) minute(s) ${clear_color} and${green} $((SECONDS % 60)) second(s)${clear_color}!\n"
