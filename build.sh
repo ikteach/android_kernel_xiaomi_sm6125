@@ -25,7 +25,7 @@ ak3_dir="$topdir/AnyKernel3"
 export KBUILD_BUILD_USER="$(whoami)"
 export KBUILD_BUILD_HOST="$(hostname)"
 
-make_options="ARCH=arm64 CC=clang AS=llvm-as CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1 DTC_EXT='/usr/bin/dtc -a 64'"
+make_options="ARCH=arm64 CC=clang AS=llvm-as CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1 DTC_EXT=$tc_dir/bin/dtc"
 make_prefix=""
 while getopts "m:chb" opt; do
 	case $opt in
@@ -153,6 +153,11 @@ if command -v mkdtimg >/dev/null 2&>1; then
 	fi
 else
 	printf "${yellow}mkdtimg${clear_color} found in user's PATH\n"
+fi
+#using wrapper around /usr/bin/dtc to pass options to it
+if [ ! -e "$tc_dir/bin/dtc" ]; then
+	cp $topdir/dtc $tc_dir/bin/dtc
+	chmod +x $tc_dir/bin/dtc
 fi
 #get anykernel3 branch
 if [ ! -d "$ak3_dir" ]; then
