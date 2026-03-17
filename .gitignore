@@ -18,6 +18,7 @@
 *.dtb.S
 *.dwo
 *.elf
+*.img
 *.gcno
 *.gz
 *.ko
