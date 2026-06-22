@@ -8,6 +8,11 @@
 #include "debug.h"
 #include "fw.h"
 
+/* Compatibility fix for older kernels missing this flag */
+#ifndef RX_FLAG_NO_PSDU
+#define RX_FLAG_NO_PSDU BIT(13)
+#endif
+
 void rtw_rx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
 		  struct sk_buff *skb)
 {
@@ -40,8 +45,8 @@ struct rtw_rx_addr_match_data {
 };
 
 static void rtw_rx_phy_stat(struct rtw_dev *rtwdev,
-			    struct rtw_rx_pkt_stat *pkt_stat,
-			    struct ieee80211_hdr *hdr)
+				struct rtw_rx_pkt_stat *pkt_stat,
+				struct ieee80211_hdr *hdr)
 {
 	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
 	struct rtw_pkt_count *cur_pkt_cnt = &dm_info->cur_pkt_count;
@@ -87,20 +92,20 @@ static void rtw_rx_phy_stat(struct rtw_dev *rtwdev,
 	for (i = 0; i < rate_ss_evm; i++) {
 		idx = evm_id + i;
 		ewma_evm_add(&dm_info->ewma_evm[idx],
-			     dm_info->rx_evm_dbm[i]);
+				 dm_info->rx_evm_dbm[i]);
 	}
 
 	for (i = 0; i < rtwdev->hal.rf_path_num; i++) {
 		idx = RTW_SNR_OFDM_A + 4 * rate_ss + i;
 		ewma_snr_add(&dm_info->ewma_snr[idx],
-			     dm_info->rx_snr[i]);
+				 dm_info->rx_snr[i]);
 	}
 pkt_num:
 	cur_pkt_cnt->num_qry_pkt[pkt_stat->rate]++;
 }
 
 static void rtw_rx_addr_match_iter(void *data, u8 *mac,
-				   struct ieee80211_vif *vif)
+					struct ieee80211_vif *vif)
 {
 	struct rtw_rx_addr_match_data *iter_data = data;
 	struct ieee80211_sta *sta;
@@ -114,7 +119,7 @@ static void rtw_rx_addr_match_iter(void *data, u8 *mac,
 		return;
 
 	if (!(ether_addr_equal(vif->addr, hdr->addr1) ||
-	      ieee80211_is_beacon(hdr->frame_control)))
+		  ieee80211_is_beacon(hdr->frame_control)))
 		return;
 
 	rtw_rx_phy_stat(rtwdev, pkt_stat, hdr);
@@ -128,13 +133,13 @@ static void rtw_rx_addr_match_iter(void *data, u8 *mac,
 }
 
 static void rtw_rx_addr_match(struct rtw_dev *rtwdev,
-			      struct rtw_rx_pkt_stat *pkt_stat,
-			      struct ieee80211_hdr *hdr)
+				  struct rtw_rx_pkt_stat *pkt_stat,
+				  struct ieee80211_hdr *hdr)
 {
 	struct rtw_rx_addr_match_data data = {};
 
 	if (pkt_stat->crc_err || pkt_stat->icv_err || !pkt_stat->phy_status ||
-	    ieee80211_is_ctl(hdr->frame_control))
+		ieee80211_is_ctl(hdr->frame_control))
 		return;
 
 	data.rtwdev = rtwdev;
@@ -146,7 +151,7 @@ static void rtw_rx_addr_match(struct rtw_dev *rtwdev,
 }
 
 static void rtw_set_rx_freq_by_pktstat(struct rtw_rx_pkt_stat *pkt_stat,
-				       struct ieee80211_rx_status *rx_status)
+						struct ieee80211_rx_status *rx_status)
 {
 	rx_status->freq = pkt_stat->freq;
 	rx_status->band = pkt_stat->band;
@@ -168,11 +173,11 @@ void rtw_update_rx_freq_from_ie(struct rtw_dev *rtwdev, struct sk_buff *skb,
 	if (ieee80211_is_beacon(mgmt->frame_control)) {
 		variable = mgmt->u.beacon.variable;
 		hdr_len = offsetof(struct ieee80211_mgmt,
-				   u.beacon.variable);
+					u.beacon.variable);
 	} else if (ieee80211_is_probe_resp(mgmt->frame_control)) {
 		variable = mgmt->u.probe_resp.variable;
 		hdr_len = offsetof(struct ieee80211_mgmt,
-				   u.probe_resp.variable);
+					u.probe_resp.variable);
 	} else {
 		goto fill_rx_status;
 	}
@@ -184,10 +189,10 @@ void rtw_update_rx_freq_from_ie(struct rtw_dev *rtwdev, struct sk_buff *skb,
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0))
 	channel_number = cfg80211_get_ies_channel_number(variable, ielen,
-							 NL80211_BAND_2GHZ);
+						   NL80211_BAND_2GHZ);
 #elif (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
 	channel_number = cfg80211_get_ies_channel_number(variable, ielen,
-							 NL80211_BAND_2GHZ, 0);
+						   NL80211_BAND_2GHZ, 0);
 #else
 	channel_number = -1;
 #endif
@@ -202,9 +207,9 @@ fill_rx_status:
 EXPORT_SYMBOL(rtw_update_rx_freq_from_ie);
 
 static void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
-				  struct rtw_rx_pkt_stat *pkt_stat,
-				  struct ieee80211_hdr *hdr,
-				  struct ieee80211_rx_status *rx_status)
+					  struct rtw_rx_pkt_stat *pkt_stat,
+					  struct ieee80211_hdr *hdr,
+					  struct ieee80211_rx_status *rx_status)
 {
 	struct ieee80211_hw *hw = rtwdev->hw;
 	u8 path;
@@ -213,7 +218,7 @@ static void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
 	rx_status->freq = hw->conf.chandef.chan->center_freq;
 	rx_status->band = hw->conf.chandef.chan->band;
 	if (rtw_fw_feature_check(&rtwdev->fw, FW_FEATURE_SCAN_OFFLOAD) &&
-	    test_bit(RTW_FLAG_SCANNING, rtwdev->flags))
+		test_bit(RTW_FLAG_SCANNING, rtwdev->flags))
 		rtw_set_rx_freq_by_pktstat(pkt_stat, rx_status);
 	if (pkt_stat->crc_err)
 		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
@@ -234,16 +239,16 @@ static void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
 #endif
 
 	if (rx_status->band == NL80211_BAND_5GHZ &&
-	    pkt_stat->rate >= DESC_RATE6M &&
-	    pkt_stat->rate <= DESC_RATE54M) {
+		pkt_stat->rate >= DESC_RATE6M &&
+		pkt_stat->rate <= DESC_RATE54M) {
 		rx_status->rate_idx = pkt_stat->rate - DESC_RATE6M;
 	} else if (rx_status->band == NL80211_BAND_2GHZ &&
-		   pkt_stat->rate >= DESC_RATE1M &&
-		   pkt_stat->rate <= DESC_RATE54M) {
+			   pkt_stat->rate >= DESC_RATE1M &&
+			   pkt_stat->rate <= DESC_RATE54M) {
 		rx_status->rate_idx = pkt_stat->rate - DESC_RATE1M;
 	} else if (pkt_stat->rate >= DESC_RATEMCS0) {
 		rtw_desc_to_mcsrate(pkt_stat->rate, &rx_status->rate_idx,
-				    &rx_status->nss);
+					&rx_status->nss);
 	}
 
 	rx_status->flag |= RX_FLAG_MACTIME_START;
@@ -280,9 +285,6 @@ static void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
 
 	rtw_rx_addr_match(rtwdev, pkt_stat, hdr);
 
-	/* Rtl8723cs driver checks for size < 14 or size > 8192 and
-	 * simply drops the packet.
-	 */
 	if (rtwdev->chip->id == RTW_CHIP_TYPE_8703B && pkt_stat->pkt_len == 0) {
 		rx_status->flag |= RX_FLAG_NO_PSDU;
 		rtw_dbg(rtwdev, RTW_DBG_RX, "zero length packet");
@@ -290,8 +292,8 @@ static void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
 }
 
 void rtw_rx_query_rx_desc(struct rtw_dev *rtwdev, void *rx_desc8,
-			  struct rtw_rx_pkt_stat *pkt_stat,
-			  struct ieee80211_rx_status *rx_status)
+				struct rtw_rx_pkt_stat *pkt_stat,
+				struct ieee80211_rx_status *rx_status)
 {
 	u32 desc_sz = rtwdev->chip->rx_pkt_desc_sz;
 	struct rtw_rx_desc *rx_desc = rx_desc8;
@@ -305,7 +307,7 @@ void rtw_rx_query_rx_desc(struct rtw_dev *rtwdev, void *rx_desc8,
 	pkt_stat->crc_err = le32_get_bits(rx_desc->w0, RTW_RX_DESC_W0_CRC32);
 	pkt_stat->icv_err = le32_get_bits(rx_desc->w0, RTW_RX_DESC_W0_ICV_ERR);
 	pkt_stat->drv_info_sz = le32_get_bits(rx_desc->w0,
-					      RTW_RX_DESC_W0_DRV_INFO_SIZE);
+						  RTW_RX_DESC_W0_DRV_INFO_SIZE);
 	enc_type = le32_get_bits(rx_desc->w0, RTW_RX_DESC_W0_ENC_TYPE);
 	pkt_stat->shift = le32_get_bits(rx_desc->w0, RTW_RX_DESC_W0_SHIFT);
 	pkt_stat->phy_status = le32_get_bits(rx_desc->w0, RTW_RX_DESC_W0_PHYST);
